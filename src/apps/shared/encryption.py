@@ -9,6 +9,7 @@ from cryptography.utils import int_to_bytes
 from config import settings
 
 
+# NOTE: not used
 def generate_iv(unique_identifier: str, output_length=16) -> bytes:
     cipher = Cipher(
         algorithms.AES(settings.secrets.key), modes.CFB(settings.secrets.iv)
