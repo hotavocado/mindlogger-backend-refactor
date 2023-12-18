@@ -2,14 +2,12 @@ from pydantic import BaseSettings, Field, validator
 
 
 class AccessTokenSettings(BaseSettings):
-    secret_key: str | None = Field(
-        None, env="AUTHENTICATION__ACCESS_TOKEN__SECRET_KEY"
-    )
+    secret_key: str = Field("", env="AUTHENTICATION__ACCESS_TOKEN__SECRET_KEY")
     # Set in minutes
     expiration: int = 30
 
     @validator("secret_key")
-    def check_secret_key(cls, v: str | None) -> str:
+    def check_secret_key(cls, v: str) -> str:
         if not v:
             raise ValueError(
                 "Please specify AUTHENTICATION__ACCESS_TOKEN__SECRET_KEY variable"  # noqa: E501
@@ -18,14 +16,14 @@ class AccessTokenSettings(BaseSettings):
 
 
 class RefreshTokenSettings(BaseSettings):
-    secret_key: str | None = Field(
-        None, env="AUTHENTICATION__REFRESH_TOKEN__SECRET_KEY"
+    secret_key: str = Field(
+        "", env="AUTHENTICATION__REFRESH_TOKEN__SECRET_KEY"
     )
     # Set in minutes
     expiration: int = 540
 
     @validator("secret_key")
-    def check_secret_key(cls, v: str | None) -> str:
+    def check_secret_key(cls, v: str) -> str:
         if not v:
             raise ValueError(
                 "Please specify AUTHENTICATION__REFRESH_TOKEN__SECRET_KEY variable"  # noqa: E501
