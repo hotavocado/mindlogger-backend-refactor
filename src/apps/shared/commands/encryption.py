@@ -167,6 +167,8 @@ async def reencrypt(
                         print(
                             f"Batch {page} of rows in the table {table_name} was processed."  # noqa: E501
                         )
+                        if len(rows) < limit:
+                            break
                         # Get next rows
                         page += 1
                     print(
