@@ -10,6 +10,13 @@ MYPY_COMMAND = mypy
 
 DOCKER_EXEC = docker-compose run --rm app
 
+PLATFORM=$(shell uname | tr '[:upper:]' '[:lower:]')
+GENERATE_SECRET_CMD=$(shell openssl rand -hex 32)
+SEDFLAGS = -i
+ifeq ($(PLATFORM), darwin)
+	SEDFLAGS += ''
+endif
+
 # ###############
 # Local
 # ###############
@@ -62,6 +69,18 @@ dcheck:
 	${DOCKER_EXEC} \
 		${BLACK_COMMAND} ./ && ${FLAKE8_COMMAND} ./ && ${ISORT_COMMAND} ./ && ${MYPY_COMMAND} ./ \
 		&& ${TEST_COMMAND}
+
+
+.PHONY: generate-secret
+generate-secret:
+	openssl rand -hex 32
+
+
+.PHONY: set-local-secrets
+set-local-secrets:
+	openssl rand -hex 32 | xargs -I '{}' sed $(SEDFLAGS) 's/secret1/{}/' .env
+	openssl rand -hex 32 | xargs -I '{}' sed $(SEDFLAGS) 's/secret2/{}/' .env
+	openssl rand -hex 32 | xargs -I '{}' sed $(SEDFLAGS) 's/secret3/{}/' .env
 
 
 # Setting pre-commit hooks to search for aws keys

@@ -65,12 +65,6 @@ git clone git@github.com:ChildMindInstitute/mindlogger-backend-refactor.git
 | AUTHENTICATION__REFRESH_TOKEN__EXPIRATION | 30                                                               | Time in minutes after which the refresh token will stop working                                                                                                               |
 | ADMIN_DOMAIN | -                                                                | Admin panel domain                                                                                                                                                            |
 
-##### NOTE:
-> If you want to generate your own secret key for authentication or encryption please use next command:
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
 ##### ✋ Mandatory:
 
 > You can see that some environment variables have double underscore (`__`) instead of `_`.
@@ -85,10 +79,15 @@ It is hightly recommended to create `.env` file as far as it is needed for setti
 cp .env.default .env
 ```
 
-#### 2.3 Generate secret keys, update .env with values
+#### 2.3 Generate secret keys, update .env with values. If you want to set all secrets with one command go to the 2.4
 
 ```bash
-openssl rand -hex 32
+make generate-secret
+```
+
+#### 2.4 Set all local secrets
+```bash
+make set-local-secrets
 ```
 
 <br/>
