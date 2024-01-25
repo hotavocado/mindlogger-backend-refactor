@@ -98,84 +98,73 @@ async def reencrypt(
     )
     encryptor = StringEncryptedType(Unicode, encrypt_key)
     tables = tables if tables else list(TABLE_NAME_COLUMN_NAME_MAP.keys())
-    try:
-        async with session_maker() as session:
-            async with atomic(session):
-                for table_name in tables:
-                    columns = TABLE_NAME_COLUMN_NAME_MAP.get(table_name, [])
-                    if not columns:
-                        print(
-                            "[red]"
-                            f"[bold]{table_name}[/bold] table does not have "
-                            "encrypted columns. Skipped[red]"
-                        )
-                        continue
-                    select_cols = ", ".join(columns)
-                    cnds = " or ".join(
-                        [f"{col} is not null" for col in columns]
-                    )
-                    limit = ROWS_PER_SELECT_LIMIT
-                    page = 1
-                    reencrypted = 0
-                    while True:
-                        offset = (page - 1) * limit
-                        sql = f"""
-                            select
-                                id,
-                                {select_cols}
-                            from {table_name}
-                            where {cnds}
-                            order by created_at, id
-                            limit {limit} offset {offset}
-                            for update
-                        """
-                        result = await session.execute(sql)
-                        rows = result.all()
-                        if not rows:
-                            break
-                        for row in rows:
-                            id_ = row.id
-                            to_update = {}
-                            for col in columns:
-                                value = getattr(row, col)
-                                if value:
-                                    decrypted_value = (
-                                        decryptor.process_result_value(
-                                            value, session.bind.dialect
-                                        )
-                                    )
-                                    encrypted_value = (
-                                        encryptor.process_bind_param(
-                                            decrypted_value,
-                                            session.bind.dialect,
-                                        )
-                                    )
-                                    to_update[col] = encrypted_value
-                            if to_update:
-                                cols = ", ".join(
-                                    [
-                                        f"{col} = :{col}"
-                                        for col in to_update.keys()
-                                    ]
-                                )
-                                to_update["id"] = id_
-                                await session.execute(
-                                    f"update {table_name} set {cols} where id = :id",  # noqa: E501
-                                    to_update,
-                                )
-                                reencrypted += 1
-                        print(
-                            f"Batch {page} of rows in the table {table_name} was processed."  # noqa: E501
-                        )
-                        if len(rows) < limit:
-                            break
-                        # Get next rows
-                        page += 1
+    async with session_maker() as session:
+        async with atomic(session):
+            for table_name in tables:
+                columns = TABLE_NAME_COLUMN_NAME_MAP.get(table_name, [])
+                if not columns:
                     print(
-                        "[green]"
-                        f"{reencrypted} rows in [bold]{table_name}[/bold] table were reencrypted."  # noqa: E501
-                        "[green]"
+                        "[red]"
+                        f"[bold]{table_name}[/bold] table does not have "
+                        "encrypted columns. Skipped[red]"
                     )
-
-    finally:
-        await session_maker.remove()
+                    continue
+                select_cols = ", ".join(columns)
+                cnds = " or ".join([f"{col} is not null" for col in columns])
+                limit = ROWS_PER_SELECT_LIMIT
+                page = 1
+                reencrypted = 0
+                while True:
+                    offset = (page - 1) * limit
+                    sql = f"""
+                        select
+                            id,
+                            {select_cols}
+                        from {table_name}
+                        where {cnds}
+                        order by created_at, id
+                        limit {limit} offset {offset}
+                        for update
+                    """
+                    result = await session.execute(sql)
+                    rows = result.all()
+                    if not rows:
+                        break
+                    for row in rows:
+                        id_ = row.id
+                        to_update = {}
+                        for col in columns:
+                            value = getattr(row, col)
+                            if value:
+                                decrypted_value = (
+                                    decryptor.process_result_value(
+                                        value, session.bind.dialect
+                                    )
+                                )
+                                encrypted_value = encryptor.process_bind_param(
+                                    decrypted_value,
+                                    session.bind.dialect,
+                                )
+                                to_update[col] = encrypted_value
+                        if to_update:
+                            cols = ", ".join(
+                                [f"{col} = :{col}" for col in to_update.keys()]
+                            )
+                            to_update["id"] = id_
+                            await session.execute(
+                                f"update {table_name} set {cols} where id = :id",  # noqa: E501
+                                to_update,
+                            )
+                            reencrypted += 1
+                    print(
+                        f"Batch {page} of rows in the table {table_name} was processed."  # noqa: E501
+                    )
+                    if len(rows) < limit:
+                        break
+                    # Get next rows
+                    page += 1
+                print(
+                    "[green]"
+                    f"{reencrypted} rows in [bold]{table_name}[/bold] table were reencrypted."  # noqa: E501
+                    "[green]"
+                )
