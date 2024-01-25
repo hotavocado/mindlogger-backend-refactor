@@ -9,9 +9,9 @@ import typer  # noqa: E402
 
 from apps.activities.commands import activities  # noqa: E402
 from apps.answers.commands import convert_assessments  # noqa: E402
+from apps.shared.commands import encryption  # noqa: E402
 from apps.shared.commands import patch  # noqa: E402
 from apps.users.commands import token_cli  # noqa: E402
-from apps.shared.commands import encryption  # noqa: E402
 from apps.workspaces.commands import arbitrary_server_cli  # noqa: E402
 
 cli = typer.Typer()

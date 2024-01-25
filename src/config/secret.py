@@ -8,4 +8,4 @@ class SecretSettings(BaseModel):
     def key(self) -> bytes:
         if self.secret_key:
             return bytes.fromhex(self.secret_key)
-        raise ValueError("Please specify SECRETS__SECRET_KEY vairable")
+        raise ValueError("Please specify SECRETS__SECRET_KEY variable")
